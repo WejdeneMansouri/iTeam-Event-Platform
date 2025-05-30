@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'config/db.php'; // Assure-toi que ce chemin est bon
+require_once 'config/db.php'; // Vérifie que ce chemin est correct
 
 $error = '';
 
@@ -15,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($admin && $password === $admin['password_hash']) {
-
             $_SESSION['admin_id'] = $admin['id'];
             $_SESSION['username'] = $admin['username'];
             header('Location: admin/dashboard.php');
@@ -48,35 +47,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Connexion</title>
+    <title>Connexion - ITEAM University</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f2f2f2; }
-        .login-box {
-            width: 350px; margin: 100px auto; background: white; padding: 20px;
-            border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #eef2f5;
         }
-        h2 { text-align: center; color: #007BFF; }
-        input, select, button {
-            width: 100%; padding: 10px; margin-top: 10px;
-            border: 1px solid #ccc; border-radius: 5px;
+        .login-container {
+            width: 400px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.1);
         }
-        button { background-color: #007BFF; color: white; border: none; }
-        .error { color: red; text-align: center; margin-top: 10px; }
+        .logo {
+            display: block;
+            margin: 0 auto 10px auto;
+            height: 80px;
+        }
+        .title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 20px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-select {
+            background-color: #f9f9f9;
+        }
+        .submit-btn {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .submit-btn:hover {
+            background-color: #004494;
+        }
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .profile-tabs {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .profile-tabs label {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            background-color: #f0f0f0;
+        }
+        .profile-tabs input:checked + label {
+            background-color: #0056b3;
+            color: white;
+        }
+        input[type="radio"] {
+            display: none;
+        }
     </style>
 </head>
 <body>
-<div class="login-box">
-    <h2>Connexion</h2>
-    <?php if ($error): ?><div class="error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
+<div class="login-container">
+    <img src="logo.png" alt="Logo ITEAM University" class="logo">
+    <div class="title">ITEAM UNIVERSITY</div>
+    <div style="text-align: center; font-size: 18px; margin-bottom: 10px;"><strong>Connexion</strong></div>
+
+    <?php if ($error): ?>
+        <div class="error"><?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
+
     <form method="post">
-        <select name="profile" required>
-            <option value="">-- Choisir le profil --</option>
-            <option value="admin">Administrateur</option>
-            <option value="student">Étudiant</option>
+        <div class="profile-tabs">
+            <input type="radio" id="student" name="profile" value="student" required>
+            <label for="student">ÉTUDIANT</label>
+
+            <input type="radio" id="admin" name="profile" value="admin">
+            <label for="admin">ADMINISTRATION</label>
+        </div>
+
+        <input type="text" name="identifiant" placeholder="Login" class="form-control" required>
+        <input type="password" name="password" placeholder="Mot de passe" class="form-control" required>
+
+        <select name="annee" class="form-control form-select">
+            <option value="2024/2025">2024/2025</option>
+            <option value="2023/2024">2023/2024</option>
         </select>
-        <input type="text" name="identifiant" placeholder="Nom d'utilisateur ou Email" required>
-        <input type="password" name="password" placeholder="Mot de passe" required>
-        <button type="submit">Se connecter</button>
+
+        <button type="submit" class="form-control submit-btn">SE CONNECTER</button>
     </form>
 </div>
 </body>
