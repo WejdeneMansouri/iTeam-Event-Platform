@@ -147,6 +147,111 @@ $events = $pdo->query("SELECT * FROM events ORDER BY start_date DESC")->fetchAll
             margin-left: auto;
             margin-right: auto;
         }
+        .modal {
+    display: none;
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #fff;
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    max-height: 80vh;
+    overflow-y: auto;
+    max-width: 500px;
+    width: 90%;
+    font-family: Arial, sans-serif;
+}
+
+.modal h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 20px;
+    text-align: center;
+    color: #333;
+}
+
+.modal label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+    color: #444;
+}
+
+.modal input[type="text"],
+.modal input[type="number"],
+.modal input[type="datetime-local"],
+.modal textarea,
+.modal select {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.modal textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.modal-buttons {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.modal-buttons button {
+    padding: 8px 14px;
+    font-size: 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.modal-buttons button[type="submit"] {
+    background-color: #28a745;
+    color: white;
+}
+
+.modal-buttons button[type="submit"]:hover {
+    background-color: #218838;
+}
+
+.modal-buttons button[type="button"] {
+    background-color: #dc3545;
+    color: white;
+}
+
+.modal-buttons button[type="button"]:hover {
+    background-color: #c82333;
+}
+
+
+@media (max-width: 500px) {
+    .modal {
+        width: 95%;
+        padding: 15px;
+        max-height: 90vh;
+    }
+
+    .modal-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .modal-buttons button {
+        width: 100%;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -221,10 +326,10 @@ $events = $pdo->query("SELECT * FROM events ORDER BY start_date DESC")->fetchAll
 });
 
 </script>
-<div id="eventFormModal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:#fff; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.3); z-index:1000;">
+<div id="eventFormModal" class="modal">
     <h3>Ajouter un événement</h3>
     <form id="eventForm" method="POST" action="add_event.php">
-         <label>Titre:</label>
+        <label>Titre:</label>
         <input type="text" name="title" required>
 
         <label>Description:</label>
@@ -233,7 +338,7 @@ $events = $pdo->query("SELECT * FROM events ORDER BY start_date DESC")->fetchAll
         <label>Lieu:</label>
         <input type="text" name="location" required>
 
-      <label>Date début:</label>
+        <label>Date début:</label>
         <input type="datetime-local" name="start_date" required>
 
         <label>Date fin:</label>
@@ -250,10 +355,14 @@ $events = $pdo->query("SELECT * FROM events ORDER BY start_date DESC")->fetchAll
 
         <label>Nombre max. de participants:</label>
         <input type="number" name="max_participants" required>
-        <button type="submit">Ajouter</button>
-        <button type="button" onclick="document.getElementById('eventFormModal').style.display='none'">Annuler</button>
+
+        <div class="modal-buttons">
+            <button type="submit">Ajouter</button>
+            <button type="button" onclick="document.getElementById('eventFormModal').style.display='none'">Annuler</button>
+        </div>
     </form>
 </div>
+
 
 </body>
 </html>
