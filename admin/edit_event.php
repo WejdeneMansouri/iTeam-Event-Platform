@@ -1,5 +1,4 @@
 <?php
-// admin/edit_event.php
 require_once '../config/db.php';
 
 if (!isset($_GET['id'])) {
@@ -9,7 +8,6 @@ if (!isset($_GET['id'])) {
 
 $id = $_GET['id'];
 
-// Récupération des infos de l'événement
 $stmt = $pdo->prepare("SELECT * FROM events WHERE id = ?");
 $stmt->execute([$id]);
 $event = $stmt->fetch();
@@ -19,7 +17,6 @@ if (!$event) {
     exit;
 }
 
-// Mise à jour
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $pdo->prepare("UPDATE events SET title = ?, description = ?, location = ?, start_date = ?, end_date = ?, type = ?, max_participants = ? WHERE id = ?");
     $stmt->execute([

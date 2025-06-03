@@ -1,85 +1,118 @@
 <?php
 session_start();
-require_once '../config/db.php';
+require_once '../config/db.php'; 
 
 if (!isset($_SESSION['student_id'])) {
-    header("Location: ../login.php");
+    header('Location: login.php');
     exit;
 }
 
 $student_id = $_SESSION['student_id'];
 
-// Traitement de la mise à jour
+$stmt = $pdo->prepare("SELECT * FROM students WHERE id = ?");
+$stmt->execute([$student_id]);
+$student = $stmt->fetch(PDO::FETCH_ASSOC);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $full_name = $_POST['full_name'] ?? '';
     $email = $_POST['email'] ?? '';
     $phone = $_POST['phone'] ?? '';
-    $organization = $_POST['organization'] ?? '';
 
-    $stmt = $pdo->prepare("UPDATE students SET full_name = ?, email = ?, phone = ?, organization = ? WHERE id = ?");
-    $stmt->execute([$full_name, $email, $phone, $organization, $student_id]);
+    $update = $pdo->prepare("UPDATE students SET full_name = ?, email = ?, phone = ? WHERE id = ?");
+    $update->execute([$full_name, $email, $phone, $student_id]);
 
-    $_SESSION['student_name'] = $full_name; // mise à jour de la session
+    $_SESSION['student_name'] = $full_name;
+
+    $stmt->execute([$student_id]);
+    $student = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $message = "✅ Informations mises à jour avec succès.";
 }
-
-// Récupération des données de l'étudiant
-$stmt = $pdo->prepare("SELECT * FROM students WHERE id = ?");
-$stmt->execute([$student_id]);
-$student = $stmt->fetch();
-
-if (!$student) {
-    session_destroy();
-    header("Location: ../login.php");
-    exit;
-}
-
-// Récupération de l'historique complet
-$eventsStmt = $pdo->prepare("
-    SELECT e.*, p.status
-    FROM participants p
-    JOIN events e ON p.event_id = e.id
-    WHERE p.student_id = ?
-    ORDER BY e.start_date DESC
-");
-$eventsStmt->execute([$student_id]);
-$allEvents = $eventsStmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mon Profil Étudiant</title>
+    <title>Mon Profil</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f7fc; padding: 20px; color: #333; }
-        h2 { margin-bottom: 15px; color: #1e88e5; }
-        .profile-info, form {
-            background: white; padding: 20px; border-radius: 8px; max-width: 600px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 40px;
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+            margin: 0;
+            padding: 0;
         }
-        .profile-info p { margin: 10px 0; }
-        label { display: block; margin-top: 10px; font-weight: bold; }
-        input { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; }
-        button {
-            margin-top: 15px; background: #1e88e5; color: white; padding: 10px 15px;
-            border: none; border-radius: 4px; cursor: pointer;
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
         }
-        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background: #1e88e5; color: white; }
-        tr:hover { background: #f1f1f1; }
-        .status-confirmed { color: green; font-weight: bold; }
-        .status-pending { color: orange; font-weight: bold; }
-        .status-cancelled { color: red; font-weight: bold; }
-        a.back { display: inline-block; margin-top: 20px; text-decoration: none; color: #1e88e5; font-weight: 500; }
-        a.back:hover { text-decoration: underline; }
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+        }
+        form label {
+            display: block;
+            margin-top: 15px;
+            color: #555;
+        }
+        form input {
+            width: 100%;
+            padding: 8px 12px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        form button {
+            margin-top: 20px;
+            background-color: #2ecc71;
+            color: white;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        form button:hover {
+            background-color: #27ae60;
+        }
+        .photo {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .photo img {
+            max-width: 120px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        .success-message {
+            background-color: #dff0d8;
+            padding: 10px;
+            border-radius: 6px;
+            color: #3c763d;
+            margin-bottom: 15px;
+        }
+         a.back {
+            display: inline-block;
+            margin-top: 10px;
+            color: #1e88e5;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
 
-<h2>👤 Mon Profil</h2>
+<div class="container">
+    <h2>Mon Profil</h2>
 
-<div class="profile-info">
+    <?php if (!empty($message)) : ?>
+        <div class="success-message"><?= htmlspecialchars($message) ?></div>
+    <?php endif; ?>
+
     <form method="post">
         <label>Nom complet :</label>
         <input type="text" name="full_name" value="<?= htmlspecialchars($student['full_name']) ?>" required>
@@ -87,44 +120,22 @@ $allEvents = $eventsStmt->fetchAll(PDO::FETCH_ASSOC);
         <label>Email :</label>
         <input type="email" name="email" value="<?= htmlspecialchars($student['email']) ?>" required>
 
+        <label>Téléphone :</label>
+        <input type="text" name="phone" value="<?= htmlspecialchars($student['phone']) ?>">
 
+        <label>CIN :</label>
+        <input type="text" value="<?= htmlspecialchars($student['cin']) ?>" disabled>
+
+        <label>Genre :</label>
+        <input type="text" value="<?= htmlspecialchars($student['gender']) ?>" disabled>
+
+        <label>Date d'inscription :</label>
+        <input type="text" value="<?= htmlspecialchars($student['created_at']) ?>" disabled>
 
         <button type="submit">💾 Mettre à jour</button>
+        <a href="home.php" class="back">← Retour à l’accueil</a>
+
     </form>
 </div>
-
-<h2>📜 Historique de participation</h2>
-
-<?php if (count($allEvents) > 0): ?>
-<table>
-    <thead>
-        <tr>
-            <th>Titre</th>
-            <th>Description</th>
-            <th>Date début</th>
-            <th>Date fin</th>
-            <th>Statut</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($allEvents as $event): ?>
-            <tr>
-                <td><?= htmlspecialchars($event['title']) ?></td>
-                <td><?= htmlspecialchars($event['description']) ?></td>
-                <td><?= htmlspecialchars($event['start_date']) ?></td>
-                <td><?= htmlspecialchars($event['end_date']) ?></td>
-                <td class="status-<?= strtolower($event['status']) ?>">
-                    <?= ucfirst($event['status']) ?>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
-<?php else: ?>
-    <p>Vous n'avez participé à aucun événement.</p>
-<?php endif; ?>
-
-<a href="home.php" class="back">← Retour à l’accueil</a>
-
 </body>
 </html>

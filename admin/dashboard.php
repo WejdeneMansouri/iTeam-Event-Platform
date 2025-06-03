@@ -1,33 +1,40 @@
 <?php
+
 session_start();
 require_once '../config/db.php';
 
-// Transfert automatique des événements passés vers "historique"
 $today = date('Y-m-d');
 $pastEventsStmt = $pdo->query("SELECT * FROM events WHERE end_date < '$today'");
 $pastEvents = $pastEventsStmt->fetchAll(PDO::FETCH_ASSOC);
 
 foreach ($pastEvents as $pastEvent) {
-    // Insertion dans historique
     $insert = $pdo->prepare("INSERT INTO historique SELECT * FROM events WHERE id = ?");
     $insert->execute([$pastEvent['id']]);
 
-    // Suppression de la table events
     $delete = $pdo->prepare("DELETE FROM events WHERE id = ?");
     $delete->execute([$pastEvent['id']]);
 }
 
 if (!isset($_SESSION['admin_id'])) {
-    header("Location: connexion/login.php");
+    header("Location: login.php");
     exit;
 }
+$adminId = $_SESSION['admin_id'];
+$stmt = $pdo->prepare("SELECT username, photo_path FROM admins WHERE id = ?");
+$stmt->execute([$adminId]);
+$admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Récupération des événements pour affichage rapide
+$username = $admin ? htmlspecialchars($admin['username']) : 'Administrateur';
+$photoPath = $admin && !empty($admin['photo_path']) ? $admin['photo_path'] : '';
+
+
+
+
 $stmt = $pdo->query("SELECT * FROM events ORDER BY start_date DESC");
 $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
-// Statistiques
 $totalEvents = $pdo->query("SELECT COUNT(*) FROM events")->fetchColumn();
 $totalParticipants = $pdo->query("SELECT COUNT(*) FROM participants")->fetchColumn();
+$proposedEventsCount = $pdo->query("SELECT COUNT(*) FROM proposed_events")->fetchColumn();
 $confirmedParticipants = $pdo->query("SELECT COUNT(*) FROM participants WHERE status = 'confirmed'")->fetchColumn();
 $topEventStmt = $pdo->query("
     SELECT e.title, COUNT(p.id) AS total
@@ -38,19 +45,18 @@ $topEventStmt = $pdo->query("
     LIMIT 1
 ");
 $topEvent = $topEventStmt->fetch();
-// Liste des événements
 $events = $pdo->query("SELECT * FROM events ORDER BY start_date DESC")->fetchAll();
 ?>
 
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css' rel='stylesheet' />
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js'></script>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
     <meta charset="UTF-8">
     <title>Dashboard Admin</title>
     <style>
-        /* styles CSS non modifiés */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Roboto', Arial, sans-serif;
@@ -135,32 +141,47 @@ $events = $pdo->query("SELECT * FROM events ORDER BY start_date DESC")->fetchAll
             transition: transform 0.3s;
         }
         .notif:hover { transform: translateY(-2px); }
+        #calendar {
+            margin-top: 40px;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
     </style>
 </head>
 <body>
 
-<h2>Tableau de bord de l’administrateur</h2>
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 30px;">
+    <?php if ($photoPath && file_exists(__DIR__ . '/../' . $photoPath)): ?>
+        <img src="../<?= htmlspecialchars($photoPath) ?>" alt="Photo de <?= $username ?>" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #1e88e5;">
+    <?php else: ?>
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: #ccc;"></div>
+    <?php endif; ?>
+    <h2 style="margin: 0;">Bonjour <?= $username ?></h2>
+</div>
+
 
 <div class="nav">
     <a href="participants.php">👥 Gérer les participants</a>
     <a href="add_event.php">➕ Ajouter un événement</a>
     <a href="add_admin.php">👤 Ajouter un utilisateur</a>
-    <a href="historique.php">🕓 Historique</a>
+    <a href="historique.php">📜 Historique des événements</a>
+    <a href="proposed_events.php" >📩 Gérer les propositions</a><br>
 
     <a href="../login.php">🔒 Déconnexion</a>
 </div>
 
 <div class="notifications">
-    <div class="notif">
-        <a href="/webdev/event-platform/events/list.php" style="color: white; text-decoration: none;">Événements : <?= $totalEvents ?></a>
-    </div>
+    
     <div class="notif">
         <a href="participants.php" style="color: white; text-decoration: none;">Participants : <?= $totalParticipants ?></a>
     </div>
+
     <div class="notif">
-        <a href="participants.php?status=confirmed" style="color: white; text-decoration: none;">Confirmés : <?= $confirmedParticipants ?></a>
+        <a href="proposed_events.php" style="color: white; text-decoration: none;">Propositions : <?= $proposedEventsCount ?></a>
     </div>
 </div>
+
 
 <?php if (isset($_GET['view']) && $_GET['view'] === 'top' && $topEvent): ?>
     <div class="event">
@@ -169,21 +190,70 @@ $events = $pdo->query("SELECT * FROM events ORDER BY start_date DESC")->fetchAll
     </div>
 <?php endif; ?>
 
-<?php if (count($events) > 0): ?>
-    <?php foreach ($events as $event): ?>
-        <div class="event">
-            <h3><?= htmlspecialchars($event['title']) ?></h3>
-            <p><?= htmlspecialchars($event['description']) ?></p>
-            <small><?= htmlspecialchars($event['start_date']) ?> → <?= htmlspecialchars($event['end_date']) ?></small>
-            <div class="event-actions">
-                <a href="event_details.php?id=<?= $event['id'] ?>">Détails</a>
-                <a href="delete_event.php?id=<?= $event['id'] ?>" class="delete" onclick="return confirm('Confirmer la suppression ?')">Supprimer</a>
-            </div>
-        </div>
-    <?php endforeach; ?>
-<?php else: ?>
-    <p>Aucun événement enregistré.</p>
-<?php endif; ?>
+
+
+<div id='calendar'></div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        height: 600,
+        events: [
+            <?php foreach ($events as $event): ?>
+            {
+                title: "<?= htmlspecialchars($event['title']) ?>",
+                start: "<?= $event['start_date'] ?>",
+                end: "<?= date('Y-m-d', strtotime($event['end_date'] . ' +1 day')) ?>",
+                url: "event_details.php?id=<?= $event['id'] ?>"
+            },
+            <?php endforeach; ?>
+        ],
+        dateClick: function(info) {
+            document.getElementById('eventFormModal').style.display = 'block';
+            document.getElementById('eventStartDate').value = info.dateStr;
+            document.getElementById('eventEndDate').value = info.dateStr;
+            document.getElementById('eventTitle').focus();
+
+        }
+    });
+    calendar.render();
+});
+
+</script>
+<div id="eventFormModal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:#fff; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.3); z-index:1000;">
+    <h3>Ajouter un événement</h3>
+    <form id="eventForm" method="POST" action="add_event.php">
+         <label>Titre:</label>
+        <input type="text" name="title" required>
+
+        <label>Description:</label>
+        <textarea name="description" required></textarea>
+
+        <label>Lieu:</label>
+        <input type="text" name="location" required>
+
+      <label>Date début:</label>
+        <input type="datetime-local" name="start_date" required>
+
+        <label>Date fin:</label>
+        <input type="datetime-local" name="end_date" required>
+
+        <label>Type:</label>
+        <select name="type">
+            <option value="job_fair">Job Fair</option>
+            <option value="workshop">Workshop</option>
+            <option value="training">Training</option>
+            <option value="meeting">Meeting</option>
+            <option value="other">Other</option>
+        </select>
+
+        <label>Nombre max. de participants:</label>
+        <input type="number" name="max_participants" required>
+        <button type="submit">Ajouter</button>
+        <button type="button" onclick="document.getElementById('eventFormModal').style.display='none'">Annuler</button>
+    </form>
+</div>
 
 </body>
 </html>

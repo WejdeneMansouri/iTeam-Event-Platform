@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'config/db.php'; // Vérifie que ce chemin est correct
+require_once 'config/db.php';
 
 $error = '';
 
@@ -10,11 +10,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $profile = $_POST['profile'] ?? '';
 
     if ($profile === 'admin') {
-        $stmt = $pdo->prepare("SELECT * FROM admins WHERE username = ?");
+        $stmt = $pdo->prepare("SELECT * FROM admins WHERE email = ?");
         $stmt->execute([$identifiant]);
         $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($admin && $password === $admin['password_hash']) {
+if ($admin && password_verify($password, $admin['password_hash'])) {
             $_SESSION['admin_id'] = $admin['id'];
             $_SESSION['username'] = $admin['username'];
             header('Location: admin/dashboard.php');

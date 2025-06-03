@@ -7,7 +7,6 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
-// Ajout ou modification d’un événement
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $_POST['title'];
     $description = $_POST['description'];
@@ -29,7 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// Suppression
 if (isset($_GET['delete'])) {
     $id = intval($_GET['delete']);
     $pdo->prepare("DELETE FROM events WHERE id=?")->execute([$id]);
@@ -37,7 +35,6 @@ if (isset($_GET['delete'])) {
     exit;
 }
 
-// Modification (chargement d’un événement existant)
 $editing_event = null;
 if (isset($_GET['edit'])) {
     $id = intval($_GET['edit']);
@@ -46,7 +43,6 @@ if (isset($_GET['edit'])) {
     $editing_event = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-// Tous les événements
 $events = $pdo->query("SELECT * FROM events ORDER BY start_date DESC")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 

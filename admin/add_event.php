@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         input[type="datetime-local"],
         select,
         textarea {
-            width: 100%;
+            width: 80%;
             padding: 8px;
             margin-top: 4px;
             margin-bottom: 10px;
@@ -88,44 +88,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         a:hover {
             text-decoration: underline;
         }
+
+.container {
+    display: flex;
+    gap: 40px; 
+    align-items: flex-start; 
+    margin-top: 20px;
+}
+
+form {
+    background-color: #fff;
+    padding: 20px;
+    width: 500px; 
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0; 
+}
+ .image-container {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; 
+}
+.image-container img {
+    width: 80%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+    object-fit: cover;
+}
+.container {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    margin-top: 20px;
+    width: 100%;
+}
+
     </style>
 </head>
 <body>
+
     <h2>Ajouter un événement</h2>
+        <a href="dashboard.php">← Retour au acceuil</a>
     <?php if ($message): ?>
         <p class="message"><?= $message ?></p>
     <?php endif; ?>
-    <form method="post">
-        <label>Titre:</label>
-        <input type="text" name="title" required>
 
-        <label>Description:</label>
-        <textarea name="description" required></textarea>
+    <div class="container">
+        <form method="post">
+            <label>Titre:</label>
+            <input type="text" name="title" required>
 
-        <label>Lieu:</label>
-        <input type="text" name="location" required>
+            <label>Description:</label>
+            <textarea name="description" required></textarea>
 
-        <label>Date début:</label>
-        <input type="datetime-local" name="start_date" required>
+            <label>Lieu:</label>
+            <input type="text" name="location" required>
 
-        <label>Date fin:</label>
-        <input type="datetime-local" name="end_date" required>
+            <label>Date début:</label>
+            <input type="datetime-local" name="start_date" required>
 
-        <label>Type:</label>
-        <select name="type">
-            <option value="job_fair">Job Fair</option>
-            <option value="workshop">Workshop</option>
-            <option value="training">Training</option>
-            <option value="meeting">Meeting</option>
-            <option value="other">Other</option>
-        </select>
+            <label>Date fin:</label>
+            <input type="datetime-local" name="end_date" required>
 
-        <label>Nombre max. de participants:</label>
-        <input type="number" name="max_participants" required>
+            <label>Type:</label>
+            <select name="type">
+                <option value="job_fair">Job Fair</option>
+                <option value="workshop">Workshop</option>
+                <option value="training">Training</option>
+                <option value="meeting">Meeting</option>
+                <option value="other">Other</option>
+            </select>
 
-        <button type="submit">Ajouter</button>
-    </form>
+            <label>Nombre max. de participants:</label>
+            <input type="number" name="max_participants" required>
 
-    <a href="dashboard.php">← Retour au dashboard</a>
+            <button type="submit">Ajouter</button>
+        </form>
+
+        <div class="image-container">
+            <img src="../uploads/ev.jpg" alt="Image événement" />
+        </div>
+    </div>
+
 </body>
+
+
 </html>

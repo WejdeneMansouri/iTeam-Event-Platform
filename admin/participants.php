@@ -2,7 +2,7 @@
 session_start();
 require_once '../config/db.php';
 
-// Importation de PHPMailer
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -15,24 +15,21 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
-// Récupération des événements
+
 $eventsStmt = $pdo->query("SELECT id, title FROM events ORDER BY start_date DESC");
 $events = $eventsStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Filtrage
+
 $filter_event_id = isset($_GET['event_id']) ? intval($_GET['event_id']) : 0;
 
-// Traitement des actions
 if (isset($_GET['action']) && isset($_GET['id'])) {
     $participant_id = intval($_GET['id']);
     $action = $_GET['action'];
 
     if (in_array($action, ['confirmed', 'cancelled'])) {
-        // Mise à jour du statut
         $stmt = $pdo->prepare("UPDATE participants SET status = ? WHERE id = ?");
         $stmt->execute([$action, $participant_id]);
 
-        // Récupérer infos participant
         $stmt = $pdo->prepare("SELECT p.full_name, p.email, e.title AS event_title FROM participants p
                                JOIN events e ON p.event_id = e.id
                                WHERE p.id = ?");
@@ -40,12 +37,10 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
         $participant = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($participant) {
-            // Envoi e-mail si confirmé
             if ($action === 'confirmed') {
                 sendConfirmationEmail($participant);
             }
 
-            // Envoi e-mail si annulé
             if ($action === 'cancelled') {
                 sendCancellationEmail($participant);
             }
@@ -56,16 +51,14 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     }
 }
 
-// Fonction pour envoyer l'email de confirmation
 function sendConfirmationEmail($participant) {
-    // Envoi e-mail via PHPMailer
     $mail = new PHPMailer(true);
     try {
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'wejdene404@gmail.com'; // Remplace avec ton adresse Gmail
-        $mail->Password = 'jgmn ujdh zpde utgd'; // Ton mot de passe d'application
+        $mail->Username = 'wejdene404@gmail.com'; 
+        $mail->Password = 'jgmn ujdh zpde utgd'; 
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
 
@@ -85,16 +78,15 @@ function sendConfirmationEmail($participant) {
     }
 }
 
-// Fonction pour envoyer l'email de refus
 function sendCancellationEmail($participant) {
-    // Envoi e-mail via PHPMailer
+    
     $mail = new PHPMailer(true);
     try {
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'wejdene404@gmail.com'; // Remplace avec ton adresse Gmail
-        $mail->Password = 'jgmn ujdh zpde utgd'; // Ton mot de passe d'application
+        $mail->Username = 'wejdene404@gmail.com'; 
+        $mail->Password = 'jgmn ujdh zpde utgd'; 
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
 
@@ -114,7 +106,6 @@ function sendCancellationEmail($participant) {
     }
 }
 
-// Récupération des participants
 if ($filter_event_id > 0) {
     $stmt = $pdo->prepare("SELECT p.*, e.title AS event_title FROM participants p
                            LEFT JOIN events e ON p.event_id = e.id
@@ -147,20 +138,17 @@ $participants = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .confirm { background-color: #28a745; }
         .cancel { background-color: #dc3545; }
         .delete { background-color: #6c757d; }
-        /* Style du label du formulaire */
 .form-label {
     font-weight: bold;
-    color: #007BFF; /* Couleur bleue */
+    color: #007BFF; 
     margin-right: 10px;
 }
 
-/* Style du formulaire de sélection */
 form {
     margin-bottom: 20px;
     font-size: 1em;
 }
 
-/* Style de la sélection des événements */
 #event_id {
     padding: 6px 12px;
     font-size: 1em;
@@ -170,7 +158,6 @@ form {
     transition: border-color 0.3s;
 }
 
-/* Change la couleur de bordure au survol */
 #event_id:hover {
     border-color: #007BFF;
 }
@@ -201,8 +188,7 @@ form {
         <tr>
             <th>Nom</th>
             <th>Email</th>
-            <th>Téléphone</th>
-            <th>Organisation</th>
+         
             <th>Événement</th>
             <th>Profil</th>
             <th>Statut</th>
@@ -212,8 +198,7 @@ form {
             <tr>
                 <td><?= htmlspecialchars($p['full_name']) ?></td>
                 <td><?= htmlspecialchars($p['email']) ?></td>
-                <td><?= htmlspecialchars($p['phone']) ?></td>
-                <td><?= htmlspecialchars($p['organization']) ?></td>
+  
                 <td><?= htmlspecialchars($p['event_title']) ?></td>
                 <td><?= $p['profile'] ?></td>
                 <td><?= $p['status'] ?></td>

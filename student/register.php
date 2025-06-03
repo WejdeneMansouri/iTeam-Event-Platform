@@ -22,12 +22,11 @@ $student_id = $_SESSION['student_id'];
 $success = false;
 $email_sent = false;
 
-// Récupération de l’événement
+
 $eventStmt = $pdo->prepare("SELECT * FROM events WHERE id = ?");
 $eventStmt->execute([$event_id]);
 $event = $eventStmt->fetch();
 
-// Vérifie s’il est déjà inscrit
 $stmt = $pdo->prepare("SELECT * FROM participants WHERE student_id = ? AND event_id = ?");
 $stmt->execute([$student_id, $event_id]);
 $existing = $stmt->fetch();
@@ -41,14 +40,13 @@ if (!$existing && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute([$full_name, $email, $event_id, $student_id]);
     $success = true;
 
-    // Envoi du mail de pré-inscription
     $mail = new PHPMailer(true);
     try {
         $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com'; 
+        $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'wejdene404@gmail.com'; // 👉 Remplace ici
-        $mail->Password   = 'jgmn ujdh zpde utgd'; // 👉 Ton mot de passe d'application
+        $mail->Username   = 'wejdene404@gmail.com';
+        $mail->Password   = 'jgmn ujdh zpde utgd';
         $mail->SMTPSecure = 'tls';
         $mail->Port       = 587;
 

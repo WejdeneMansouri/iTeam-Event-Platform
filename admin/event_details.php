@@ -1,5 +1,4 @@
 <?php
-// admin/event_details.php
 require_once '../config/db.php';
 
 if (!isset($_GET['id'])) {

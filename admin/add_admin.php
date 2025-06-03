@@ -28,17 +28,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $gender = $_POST['gender'] ?? '';
     $role = $_POST['role'] ?? 'organizer';
 
+    $uploadDir = __DIR__ . '/../uploads/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+
+    $photoPath = null;
+
+    if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+        $photoTmp = $_FILES['photo']['tmp_name'];
+        $photoName = basename($_FILES['photo']['name']);
+        $photoExt = strtolower(pathinfo($photoName, PATHINFO_EXTENSION));
+        $allowedExts = ['jpg', 'jpeg', 'png', 'gif'];
+
+        if (in_array($photoExt, $allowedExts)) {
+            $newPhotoName = uniqid('photo_', true) . '.' . $photoExt;
+            $photoPath = 'uploads/' . $newPhotoName;
+            move_uploaded_file($photoTmp, __DIR__ . '/../' . $photoPath);
+        }
+    }
+
     if (!empty($username) && !empty($email) && !empty($phone) && !empty($cin) && !empty($gender)) {
         $plain_password = generatePassword(10);
         $password_hash = password_hash($plain_password, PASSWORD_DEFAULT);
 
         try {
             if ($role === 'admin') {
-                $stmt = $pdo->prepare("INSERT INTO admins (username, email, password_hash, role, phone, cin, gender) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$username, $email, $password_hash, $role, $phone, $cin, $gender]);
+                $stmt = $pdo->prepare("INSERT INTO admins (username, email, password_hash, role, phone, cin, gender, photo_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$username, $email, $password_hash, $role, $phone, $cin, $gender, $photoPath]);
             } else {
-                $stmt = $pdo->prepare("INSERT INTO students (full_name, email, password_hash, created_at, phone, cin, gender) VALUES (?, ?, ?, NOW(), ?, ?, ?)");
-                $stmt->execute([$username, $email, $password_hash, $phone, $cin, $gender]);
+                $stmt = $pdo->prepare("INSERT INTO students (full_name, email, password_hash, created_at, phone, cin, gender, photo_path) VALUES (?, ?, ?, NOW(), ?, ?, ?, ?)");
+                $stmt->execute([$username, $email, $password_hash, $phone, $cin, $gender, $photoPath]);
             }
 
             $mail = new PHPMailer(true);
@@ -127,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="container">
     <h2>Ajouter un utilisateur</h2>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         <label for="username">Nom complet</label>
         <input type="text" id="username" name="username" required>
 
@@ -152,6 +172,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <option value="organizer">Étudiant</option>
             <option value="admin">Administrateur</option>
         </select>
+
+        <label for="photo">Photo de l'utilisateur (optionnel)</label>
+        <input type="file" id="photo" name="photo" accept="image/*">
 
         <button type="submit">Créer le compte</button>
     </form>

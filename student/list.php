@@ -1,7 +1,6 @@
 <?php
 require_once '../config/db.php';
 
-// Récupérer tous les événements encore valides
 $stmt = $pdo->prepare("
     SELECT e.*,
            (SELECT COUNT(*) FROM participants p WHERE p.event_id = e.id AND p.status IN ('pending', 'approved')) AS current_participants
@@ -11,7 +10,6 @@ $stmt = $pdo->prepare("
 $stmt->execute();
 $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Filtrer les événements avec des places disponibles
 $events = array_filter($events, function($event) {
     return $event['current_participants'] < $event['max_participants'];
 });

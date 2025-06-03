@@ -13,7 +13,6 @@ if (!$id) {
     exit;
 }
 
-// Récupération des données archivées
 $stmt = $pdo->prepare("SELECT * FROM historique WHERE id = ?");
 $stmt->execute([$id]);
 $event = $stmt->fetch();
@@ -23,7 +22,6 @@ if (!$event) {
     exit;
 }
 
-// Soumission du formulaire
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $_POST['title'];
     $description = $_POST['description'];
@@ -31,11 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $end = $_POST['end_date'];
     $places = $_POST['places'];
 
-    // Réinsertion dans `events`
+
     $insert = $pdo->prepare("INSERT INTO events (title, description, start_date, end_date, max_participants) VALUES (?, ?, ?, ?, ?)");
     $insert->execute([$title, $description, $start, $end, $places]);
 
-    // Suppression de l'ancien historique
+    
     $delete = $pdo->prepare("DELETE FROM historique WHERE id = ?");
     $delete->execute([$id]);
 

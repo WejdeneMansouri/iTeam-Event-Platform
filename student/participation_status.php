@@ -9,7 +9,6 @@ if (!isset($_SESSION['student_id'])) {
 
 $student_id = $_SESSION['student_id'];
 
-// Récupérer toutes les participations de l'étudiant
 $stmt = $pdo->prepare("
     SELECT e.title, e.start_date, e.end_date, e.location, p.status
     FROM participants p
@@ -80,6 +79,5 @@ $participations = $stmt->fetchAll();
 <?php else: ?>
     <p>Vous n'avez encore participé à aucun événement.</p>
 <?php endif; ?>
- <a href="home.php">← Retour home</a>
 </body>
 </html>

@@ -1,7 +1,13 @@
 <?php
 require_once '../config/db.php';
 
-// Requête pour récupérer les participants avec les titres des événements
+session_start();
+
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    header('Location: ../login.php');
+    exit();
+}
+
 $sql = "SELECT p.full_name, p.email, p.profile, p.registered_at, e.title AS event_title
         FROM participants p
         JOIN events e ON p.event_id = e.id

@@ -1,4 +1,4 @@
-<?php
+<?php 
 session_start();
 require_once '../config/db.php';
 
@@ -9,22 +9,30 @@ if (!isset($_SESSION['student_id'])) {
 
 $student_id = $_SESSION['student_id'];
 
-// Récupérer tous les événements
+$stmt = $pdo->prepare("SELECT full_name, photo_path FROM students WHERE id = :student_id");
+$stmt->execute(['student_id' => $student_id]);
+$student = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$student) {
+    header("Location: login.php");
+    exit;
+}
+
 $events = $pdo->query("SELECT * FROM events ORDER BY start_date DESC")->fetchAll(PDO::FETCH_ASSOC);
 
-// Récupérer les pré-inscriptions de l'étudiant (avec le statut)
 $preInscriptionsStmt = $pdo->prepare("SELECT event_id, status FROM participants WHERE student_id = :student_id");
 $preInscriptionsStmt->execute(['student_id' => $student_id]);
-$preInscriptions = $preInscriptionsStmt->fetchAll(PDO::FETCH_KEY_PAIR); // tableau [event_id => status]
-?>
+$preInscriptions = $preInscriptionsStmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
+
+
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <title>Dashboard Étudiant</title>
     <style>
-        /* Styles proches de ton admin pour garder la même charte graphique */
         * {
             margin: 0; padding: 0; box-sizing: border-box;
         }
@@ -101,12 +109,26 @@ $preInscriptions = $preInscriptionsStmt->fetchAll(PDO::FETCH_KEY_PAIR); // table
 </head>
 <body>
 
-<h2>Tableau de bord Étudiant</h2>
+
+
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 30px;">
+    <?php if (!empty($student['photo_path']) && file_exists(__DIR__ . '/../' . $student['photo_path'])): ?>
+        <img src="../<?= htmlspecialchars($student['photo_path']) ?>" alt="Photo de <?= htmlspecialchars($student['full_name']) ?>" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #1e88e5;">
+    <?php else: ?>
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: #ccc;"></div>
+    <?php endif; ?>
+    <h2 style="font-weight: 600; font-size: 1.8rem; color: #333;">
+        Bonjour <?= htmlspecialchars($student['full_name']) ?>
+    </h2>
+</div>
+
 
 <div class="nav">
     <a href="profile.php">👤 Mon Profil</a>
     <a href="list.php">📅 Gérer les événements</a>
     <a href="participation_status.php">📝 État de participation</a>
+    <a href="propose_event.php">➕ Proposer un événement</a>
+
     <a href="../logout.php">🔒 Déconnexion</a>
 </div>
 
@@ -126,5 +148,4 @@ $preInscriptions = $preInscriptionsStmt->fetchAll(PDO::FETCH_KEY_PAIR); // table
     <p>Aucun événement disponible pour le moment.</p>
 <?php endif; ?>
 
-</body>
 </html>
